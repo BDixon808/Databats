@@ -2,6 +2,7 @@
 
 OSU CS340 group project  
 Fall term 2023
+(Readme by Ruth Kistler)
 
 ### DESCRIPTION
 
