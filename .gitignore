@@ -1,0 +1,15 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+node_modules/
+
+database/db-connector.js
+
+.vs/
+database/db-connector.js
+database/db-connector.js
+app.js
+database/db-connector.js

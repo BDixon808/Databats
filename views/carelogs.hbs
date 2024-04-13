@@ -1,0 +1,195 @@
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+{{> header}}
+
+<!--     
+    Citation for the following function: 
+    Date: 10/12/2023
+    Partially based on: code from Dr. Curry
+    Source URL: https://github.com/osu-cs340-ecampus/nodejs-starter-app 
+-->
+
+<main>
+    {{!-- BUTTON TO RESET FILTER --}}
+  {{#if displayResetButton}}
+  <button class="modify cancel" onClick="resetBatFilter()"> x </button>
+  <div class="space"></div>
+  {{/if}}
+
+  {{!-- DISPLAY TABLE TO SEARCH DATA --}}
+  <div id="search" style="display: none;">
+    <form id="search-person-carelogs" method='GET' action='/person-filter'>
+      <div class="actions">
+              <input class="search" type="text" name="inputid" placeholder="firstname lastname" id="input-id-carelogs-search">
+        <button class="modify confirm" type="submit">go</button>
+        <button class="modify cancel" type="button" onClick="browseRecords()">escape</button>
+      </div>
+    </form>
+    <div class="space"></div>
+  </div>
+
+  {{!-- DISPLAY TABLE WITH ALL DATA --}}
+  <div id="browse">
+    <table id="carelogs_table">
+        
+      {{!-- DISPLAY COLUMN TITLES --}}
+      <thead>
+        <tr>
+          <th width=80px><button class="modify" onClick="newRecord()">add</button></th>
+          <th width=30px>id</th>
+          <th>bat</th>
+          <th>person</th>
+          <th>date/time</th>
+          <th>weight</th>
+          <th>nutrition</th>
+          <th>medical</th>
+          <th>remark</th>
+          <th width=80px></th>
+          <th width=80px><button class="modify" onClick="searchRecord()">search</button></th>
+        </tr>
+      </thead>
+
+      {{!-- DISPLAY ROWS --}}
+      <tbody>
+        {{#each carelogs}}
+        <tr>
+          <td></td>
+          <td class="id">{{this.idCareLog}}</td>
+          <td><button class="filter" onClick="filterByBat('{{this.idBat}}')" >{{this.idBat}}</button></td>
+          <td>{{this.name}}</td>
+          <td>{{this.dateTime}}</td>
+          <td>{{this.weight}}</td>
+          <td>{{this.nutrition}}</td>
+          <td>{{this.medicalCares}}</td>
+          <td>{{this.remark}}</td>
+          <td><button class="modify"
+              onClick="editRecord('{{this.idCareLog}}', '{{this.name}}', '{{this.weight}}', '{{this.nutrition}}', '{{this.medicalcares}}', '{{this.remark}}')">edit</button>
+          </td>
+          <td><button class="modify cancel" onclick="deleteCareLog({{this.idCareLog}})">delete</button></td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+  {{!-- DISPLAY TABLE TO INSERT DATA --}}
+  <div id="insert" style="display: none">
+    <form id="add_carelog_form_ajax">
+      <table class="insert_table">
+          
+        {{!-- DISPLAY COLUMN TITLES --}}
+        <tr>
+          <th>bat</th>
+          <th>person</th>
+          <th>weight (g)</th>
+          <th>nutrition (mw)</th>
+          <th>medical</th>
+          <th>remark</th>
+        </tr>
+          
+        {{!-- DISPLAY ROWS --}}
+        <tr>
+          <td>
+            <select name="bats" id="input_bat">
+              <option value="" disabled selected>select</option>
+              {{#each bats}}
+              <option>{{this.idBat}}</option>
+              {{/each}}
+            </select>
+          </td>
+          <td>
+            <select name="person" id="input_person">
+              <option value="" disabled selected>select</option>
+              {{#each persons}}
+              <option value="{{this.idPerson}}">{{this.name}}</option>
+              {{/each}}
+            </select>
+          </td>
+          <td>
+            <input type="number" step="0.01" name="input_weight" id="input_weight" placeholder="0.0" max="9.99"
+              min="0.00">
+          </td>
+          <td>
+            <input type="text" name="input_nutrition" id="input_nutrition" placeholder="00 mw">
+          </td>
+          <td>
+            <div class="checkbox-list">
+              {{#each medicalcares}}
+              <label><input type="checkbox" name="input_medical_care" class="input_medical_care"
+                  value="{{this.idMedicalCare}}"> {{this.treatment}}</label>
+              {{/each}}
+            </div>
+          </td>
+          <td>
+            <textarea name="remark" id="input_remark" placeholder="max. 250 characters"></textarea>
+          </td>
+        </tr>
+      </table>
+      <div class="space"></div>
+      <div class="actions">
+        <button class="modify confirm" type="submit" id="addCareLog" value="confirm">confirm</button>
+        <button class="modify cancel" type="button" onClick="browseRecords()">cancel</button>
+      </div>
+    </form>
+  </div>
+
+  {{!-- DISPLAY TABLE TO EDIT DATA --}}
+  <div id="edit" style="display: none">
+    <form id="update-carelog-form-ajax">
+      <table class="update_table">
+          
+        {{!-- DISPLAY COLUMN TITLES --}}
+        <tr>
+          <th class="id">care log</th>
+          <th>person</th>
+          <th>weight (g)</th>
+          <th>nutrition (mw)</th>
+          <th>medical</th>
+          <th>remark</th>
+        </tr>
+          
+        {{!-- DISPLAY ROWS --}}
+        <tr>
+          <td>
+            <input type="integer" id="id_to_update" name="input_id" value="{{this.idCareLog}}" readonly />
+          </td>
+          <td>
+            <select name="input_person" id="input_person_update">
+              {{#each persons}}
+              <option value="{{this.idPerson}}">{{this.name}}</option>
+              {{/each}}
+            </select>
+          </td>
+          <td>
+            <input type="number" step="0.01" name="input_weight" id="input_weight_update" value="{{this.weight}}"
+              max="9.99" min="0.00">
+          </td>
+          <td>
+            <input type="text" name="input_nutrition" id="input_nutrition_update" value="{{this.nutrition}}">
+          </td>
+          <td>
+            <div class="checkbox-list">
+              {{#each medicalcares}}
+              <label><input type="checkbox" name="input_medical_care", id="input_medical_care_update" class="input_medical_care"
+                  value="{{this.idMedicalCare}}"> {{this.treatment}}</label>
+              {{/each}}
+            </div>
+          </td>
+          <td>
+            <textarea name="input_remark" id="input_remark_update" value="{{this.remark}}"></textarea>
+          </td>
+        </tr>
+      </table>
+      <div class="space"></div>
+      <div class="actions">
+        <button type="submit" class="modify confirm">confirm</button>
+        <button class="modify cancel" type="button" onClick="browseRecords()">cancel</button>
+      </div>
+    </form>
+  </div>
+</main>
+
+
+{{!-- EMBEDED JAVASCRIPT DOCUMENTS --}}
+<script src="js/add_carelog.js"></script>
+<script src="js/delete_carelog.js"></script>
+<script src="js/update_carelog.js"></script>
